@@ -43,7 +43,7 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className="relative z-30 flex flex-col w-full border-b border-white/10 bg-black/95 backdrop-blur-xl px-4 py-2.5 shadow-2xl">
+    <header className="relative z-30 desktop-only-header flex flex-col w-full border-b border-white/10 bg-black/95 backdrop-blur-xl px-4 py-2.5 shadow-2xl">
       {/* Top Main Navigation Row */}
       <div className="flex items-center justify-between gap-4">
         {/* Left: Brand & Subtitle */}

@@ -76,6 +76,47 @@
   position: relative;
 }
 
+/* Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Responsive Fallback Rules (Boundary: 900px) */
+@media (max-width: 899px) {
+  .phone-viewport {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    flex: 1 1 0% !important;
+  }
+
+  .mobile-notice-fallback {
+    display: flex !important;
+  }
+
+  .desktop-only-header {
+    display: none !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .mobile-notice-fallback {
+    display: none !important;
+  }
+
+  .desktop-only-header {
+    display: flex !important;
+  }
+}
+
 /* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
@@ -85,3 +126,4 @@
     scroll-behavior: auto !important;
   }
 }
+

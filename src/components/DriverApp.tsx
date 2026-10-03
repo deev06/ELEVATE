@@ -22,6 +22,7 @@ export const DriverApp: React.FC = () => {
     toggleSmsFallback,
     isFloodActive,
     addToast,
+    setActiveTab,
   } = useReliefGridStore();
 
   const [simulatedReply, setSimulatedReply] = useState('');
@@ -54,17 +55,26 @@ export const DriverApp: React.FC = () => {
       : '#10B981';
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-vantablack overflow-y-auto">
+    <div className="w-full h-full flex flex-col min-[900px]:items-center min-[900px]:justify-center p-0 min-[900px]:p-4 bg-vantablack overflow-y-auto overflow-x-hidden max-w-full">
       {/* Unit Selector & Top Controls */}
-      <div className="flex items-center gap-3 mb-4 z-10 flex-wrap justify-center">
-        <span className="text-xs font-mono text-zinc-400">Select Vehicle:</span>
+      <div className="flex items-center gap-2 mb-0 min-[900px]:mb-4 p-2.5 min-[900px]:p-0 bg-obsidian-950 min-[900px]:bg-transparent border-b border-white/10 min-[900px]:border-none z-10 overflow-x-auto no-scrollbar shrink-0 justify-start min-[900px]:justify-center min-[900px]:flex-wrap max-w-full w-full">
+        {/* Mobile-only return button to desktop notice */}
+        <button
+          onClick={() => setActiveTab('dispatch')}
+          className="min-[900px]:hidden shrink-0 px-2.5 py-1 rounded-lg text-xs font-mono font-medium text-zinc-400 bg-obsidian-850 border border-white/10 hover:text-white flex items-center gap-1"
+          title="Return to desktop notice"
+        >
+          <span>← Notice</span>
+        </button>
+
+        <span className="text-xs font-mono text-zinc-400 shrink-0">Unit:</span>
         {ambulances.map((amb) => {
           const isSelected = amb.id === currentAmbulance.id;
           return (
             <button
               key={amb.id}
               onClick={() => setSelectedDriverAmbulanceId(amb.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all border ${
+              className={`shrink-0 px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all border ${
                 isSelected
                   ? 'bg-tactical-orange text-black border-orange-400'
                   : 'bg-obsidian-850 text-zinc-300 border-white/10 hover:border-white/20'
@@ -78,7 +88,7 @@ export const DriverApp: React.FC = () => {
         {/* SMS Fallback Toggle */}
         <button
           onClick={toggleSmsFallback}
-          className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all border flex items-center gap-1.5 ${
+          className={`shrink-0 px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all border flex items-center gap-1.5 ${
             isSmsFallbackActive
               ? 'bg-emerald-600 text-black border-emerald-400 font-bold'
               : 'bg-obsidian-850 text-zinc-300 border-white/10 hover:border-white/20'
@@ -86,16 +96,16 @@ export const DriverApp: React.FC = () => {
           title="Simulate low-connectivity GSM cellular fallback"
         >
           {isSmsFallbackActive ? <WifiOff className="w-3.5 h-3.5" /> : <Radio className="w-3.5 h-3.5" />}
-          <span>{isSmsFallbackActive ? 'SMS Fallback (Active)' : 'Broadband Data'}</span>
+          <span>{isSmsFallbackActive ? 'SMS Active' : 'Broadband Data'}</span>
         </button>
       </div>
 
-      {/* 390x800 Phone Frame */}
+      {/* 390x800 Phone Frame (Becomes full-screen below 900px) */}
       <div className="phone-viewport flex flex-col select-none">
         {/* Status Bar */}
-        <div className="h-12 w-full pt-2 px-6 flex items-center justify-between text-[11px] font-mono text-zinc-400 bg-obsidian-950 border-b border-white/5 shrink-0 z-20">
+        <div className="h-10 min-[900px]:h-12 w-full pt-1 min-[900px]:pt-2 px-4 min-[900px]:px-6 flex items-center justify-between text-[11px] font-mono text-zinc-400 bg-obsidian-950 border-b border-white/5 shrink-0 z-20">
           <span>16:04</span>
-          <div className="w-20 h-4 bg-black rounded-full border border-white/10 mx-auto" />
+          <div className="hidden min-[900px]:block w-20 h-4 bg-black rounded-full border border-white/10 mx-auto" />
           <div className="flex items-center gap-1.5">
             <span>5G</span>
             <span>94%</span>

@@ -11,6 +11,7 @@ import { DriverApp } from './components/DriverApp';
 import { CompareView } from './components/CompareView';
 import { SimulatePanel } from './components/SimulatePanel';
 import { Toasts } from './components/Toasts';
+import { MobileNotice } from './components/MobileNotice';
 import { sortPatientsByPriority } from './engine';
 
 export const App: React.FC = () => {
@@ -128,6 +129,9 @@ export const App: React.FC = () => {
 
       {/* Floating System Toasts */}
       <Toasts />
+
+      {/* Mobile Notice Fallback (< 900px, hidden on Driver App tab) */}
+      <MobileNotice />
     </div>
   );
 };
