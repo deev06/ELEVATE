@@ -13,6 +13,7 @@ import {
   Database,
 } from 'lucide-react';
 import { getMerkleProof } from '../crypto';
+import { formatISTTime } from '../time';
 
 export const AuditPortal: React.FC = () => {
   const {
@@ -42,6 +43,11 @@ export const AuditPortal: React.FC = () => {
     navigator.clipboard?.writeText(text);
     addToast('Copied to Clipboard', `${label}: ${text.slice(0, 16)}...`, 'info');
   };
+
+  const isRecordTampered =
+    selectedReceipt?.status === 'tampered' ||
+    tamperedReceiptId === selectedReceipt?.id ||
+    (selectedReceipt ? selectedReceipt.hash !== selectedReceipt.originalHash : false);
 
   return (
     <div className="w-full h-full p-6 overflow-y-auto max-w-7xl mx-auto space-y-6 bg-vantablack">
@@ -171,20 +177,18 @@ export const AuditPortal: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {selectedReceipt.status === 'verified' && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                {isRecordTampered ? (
+                  <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-red-600/30 text-rose-300 border border-red-500/50 flex items-center gap-1.5 animate-shake">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                    HASH MISMATCH
+                  </span>
+                ) : selectedReceipt.status === 'verified' ? (
+                  <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
                     Verified Genuine
                   </span>
-                )}
-                {selectedReceipt.status === 'tampered' && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-600/30 text-rose-300 border border-red-500/50 flex items-center gap-1 animate-pulse">
-                    <AlertTriangle className="w-3 h-3 text-red-400" />
-                    Tampered / Mismatch
-                  </span>
-                )}
-                {selectedReceipt.status === 'pending' && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     Pending Handover
                   </span>
                 )}
@@ -192,7 +196,7 @@ export const AuditPortal: React.FC = () => {
             </div>
 
             {/* Record Fields Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-black p-3 rounded-xl border border-white/5">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs bg-black p-3 rounded-xl border border-white/5">
               <div>
                 <span className="text-[10px] text-zinc-500 block uppercase">Anonymous Ref</span>
                 <span className="font-bold text-white">{selectedReceipt.patientRef}</span>
@@ -207,8 +211,14 @@ export const AuditPortal: React.FC = () => {
               </div>
               <div>
                 <span className="text-[10px] text-zinc-500 block uppercase">Destination Facility</span>
-                <span className={`font-bold truncate block ${selectedReceipt.status === 'tampered' ? 'text-red-400 underline' : 'text-zinc-200'}`}>
+                <span className={`font-bold truncate block ${isRecordTampered ? 'text-red-400 underline' : 'text-zinc-200'}`}>
                   {selectedReceipt.to}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-500 block uppercase">Timestamp (IST)</span>
+                <span className="font-bold text-zinc-300 truncate block font-mono">
+                  {formatISTTime(selectedReceipt.timestamp)}
                 </span>
               </div>
             </div>
@@ -223,23 +233,48 @@ export const AuditPortal: React.FC = () => {
               </p>
             </div>
 
-            {/* Tamper Alert Display */}
-            {selectedReceipt.status === 'tampered' && (
-              <div className="p-3.5 rounded-xl bg-red-950/60 border border-red-500/50 space-y-2 animate-shake">
-                <div className="flex items-center gap-2 text-rose-300 font-bold text-xs">
+            {/* Tamper Alert Display: Side-by-side stored vs recomputed hash */}
+            {isRecordTampered && (
+              <div className="p-4 rounded-xl bg-red-950/60 border border-red-500/50 space-y-3 animate-shake">
+                <div className="flex items-center gap-2 text-rose-300 font-bold text-xs uppercase tracking-wide">
                   <AlertTriangle className="w-4 h-4 text-rose-400" />
-                  <span>CRYPTOGRAPHIC MISMATCH DETECTED! (Record Modified)</span>
+                  <span>HASH MISMATCH DETECTED (Integrity Violated)</span>
                 </div>
-                <div className="space-y-1 text-[11px]">
-                  <div className="flex items-center justify-between text-emerald-300 bg-black/60 px-2.5 py-1 rounded">
-                    <span>Original Anchored Hash:</span>
-                    <span>{selectedReceipt.originalHash}</span>
+
+                {/* Stored vs Recomputed Hashes Side by Side */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-lg bg-black/70 border border-emerald-500/30 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-zinc-400 uppercase font-mono font-bold">
+                        Stored Anchored Hash
+                      </span>
+                      <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                        Original
+                      </span>
+                    </div>
+                    <code className="text-emerald-400 font-mono text-[11px] break-all block pt-1 select-all">
+                      {selectedReceipt.originalHash}
+                    </code>
                   </div>
-                  <div className="flex items-center justify-between text-rose-300 bg-black/60 px-2.5 py-1 rounded">
-                    <span>Current Computed Hash:</span>
-                    <span>{selectedReceipt.hash}</span>
+
+                  <div className="p-3 rounded-lg bg-black/70 border border-rose-500/40 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-rose-300 uppercase font-mono font-bold">
+                        Recomputed Hash
+                      </span>
+                      <span className="text-[9px] font-mono text-rose-300 bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-500/30 animate-pulse">
+                        Mismatch
+                      </span>
+                    </div>
+                    <code className="text-rose-400 font-mono text-[11px] break-all block pt-1 select-all">
+                      {selectedReceipt.hash}
+                    </code>
                   </div>
                 </div>
+
+                <p className="text-[11px] text-rose-200/90 font-sans">
+                  The payload for receipt <strong>{selectedReceipt.id}</strong> has been modified (fraudulent destination: <em>{selectedReceipt.to}</em>). Recomputing SHA-256 over canonical JSON does not match the immutable anchored root.
+                </p>
               </div>
             )}
 
@@ -253,7 +288,7 @@ export const AuditPortal: React.FC = () => {
                 <span>Verify Receipt (Compute SHA-256)</span>
               </button>
 
-              {selectedReceipt.status === 'tampered' ? (
+              {isRecordTampered ? (
                 <button
                   onClick={() => restoreReceipt(selectedReceipt.id)}
                   className="py-2 px-4 rounded-xl text-xs font-semibold bg-obsidian-900 hover:bg-obsidian-850 text-white border border-white/10 transition-all flex items-center gap-1.5"
@@ -295,7 +330,7 @@ export const AuditPortal: React.FC = () => {
             <thead>
               <tr className="border-b border-white/10 bg-black text-zinc-500 font-mono text-[10px] uppercase tracking-wider">
                 <th className="py-3 px-4">Receipt ID</th>
-                <th className="py-3 px-4">Timestamp</th>
+                <th className="py-3 px-4">Timestamp (IST)</th>
                 <th className="py-3 px-4">Resource</th>
                 <th className="py-3 px-4">From</th>
                 <th className="py-3 px-4">To</th>
@@ -307,7 +342,7 @@ export const AuditPortal: React.FC = () => {
             <tbody className="divide-y divide-white/5 font-mono">
               {receipts.map((rcp) => {
                 const isSelected = rcp.id === selectedReceipt?.id;
-                const isTampered = rcp.status === 'tampered' || tamperedReceiptId === rcp.id;
+                const isRowTampered = rcp.status === 'tampered' || tamperedReceiptId === rcp.id || rcp.hash !== rcp.originalHash;
 
                 return (
                   <tr
@@ -317,13 +352,13 @@ export const AuditPortal: React.FC = () => {
                       isSelected
                         ? 'bg-obsidian-900 border-l-2 border-l-tactical-orange'
                         : 'hover:bg-white/5'
-                    } ${isTampered ? 'bg-red-950/30 border-l-2 border-l-rose-500 animate-pulse' : ''}`}
+                    } ${isRowTampered ? 'bg-red-950/40 border-l-2 border-l-rose-500 animate-shake text-rose-200' : ''}`}
                   >
                     <td className="py-3 px-4 font-bold text-white">
                       {rcp.id}
                     </td>
-                    <td className="py-3 px-4 text-zinc-400 text-[11px]">
-                      {rcp.timestamp.includes('T') ? rcp.timestamp.split('T')[1].slice(0, 8) : rcp.timestamp}
+                    <td className="py-3 px-4 text-zinc-400 text-[11px] whitespace-nowrap">
+                      {formatISTTime(rcp.timestamp)}
                     </td>
                     <td className="py-3 px-4 text-tactical-orange font-bold">
                       {rcp.resource}
@@ -331,7 +366,7 @@ export const AuditPortal: React.FC = () => {
                     <td className="py-3 px-4 text-zinc-300 max-w-[120px] truncate">
                       {rcp.from}
                     </td>
-                    <td className={`py-3 px-4 max-w-[150px] truncate ${isTampered ? 'text-rose-400 font-bold' : 'text-zinc-200'}`}>
+                    <td className={`py-3 px-4 max-w-[150px] truncate ${isRowTampered ? 'text-rose-400 font-bold' : 'text-zinc-200'}`}>
                       {rcp.to}
                     </td>
                     <td className="py-3 px-4">
@@ -355,17 +390,15 @@ export const AuditPortal: React.FC = () => {
                       {merkleRoot.slice(0, 8)}...
                     </td>
                     <td className="py-3 px-4 text-right">
-                      {rcp.status === 'verified' && (
+                      {isRowTampered ? (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-600/30 text-rose-300 border border-rose-500/50 animate-shake inline-block">
+                          HASH MISMATCH
+                        </span>
+                      ) : rcp.status === 'verified' ? (
                         <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                           VERIFIED
                         </span>
-                      )}
-                      {rcp.status === 'tampered' && (
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-600/30 text-rose-300 border border-rose-500/50">
-                          TAMPERED
-                        </span>
-                      )}
-                      {rcp.status === 'pending' && (
+                      ) : (
                         <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           PENDING
                         </span>

@@ -193,24 +193,53 @@ export function runAllocationEngine(
         totalEtaMin: best.totalTimeMin,
         explanation,
         escalatedToEoc: false,
+        awaitingUnit: false,
         evaluations,
       });
     } else {
-      // Escalated to Emergency Operations Center (EOC)
-      const escalationReason = generateEscalationExplanation(patient, evaluations);
-
-      plans.set(patient.id, {
-        patientId: patient.id,
-        ambulanceId: null,
-        hospitalId: null,
-        ambToSceneMin: 0,
-        sceneToHospMin: 0,
-        reroutePenaltyMin: 0,
-        totalEtaMin: 0,
-        explanation: escalationReason,
-        escalatedToEoc: true,
-        evaluations,
+      // Check if any reachable hospital with open ICU bed exists
+      const reachableHospitals = hospitals.filter((hosp) => {
+        const isRoadBlocked = (isFloodActive && hosp.code === 'A') || hosp.roadAccessBlocked;
+        const isRejectedByUser = patient.rejectedHospitals?.includes(hosp.id);
+        const currentReserved = hospitalReservedCounts[hosp.id] || 0;
+        const unreservedBeds = hosp.totalIcuBeds - hosp.occupiedIcuBeds - currentReserved;
+        const hasBed = patient.triage !== 'RED' || unreservedBeds > 0;
+        return !isRoadBlocked && !isRejectedByUser && hasBed;
       });
+
+      if (reachableHospitals.length > 0 && candidateAmbulances.length === 0) {
+        // Hospital and bed exist, but all ambulances are currently deployed
+        plans.set(patient.id, {
+          patientId: patient.id,
+          ambulanceId: null,
+          hospitalId: reachableHospitals[0].id,
+          ambToSceneMin: 0,
+          sceneToHospMin: reachableHospitals[0].baseTravelTimeMin,
+          reroutePenaltyMin: 0,
+          totalEtaMin: 0,
+          explanation: `Awaiting unit: All emergency transport ambulances are currently deployed on active missions. Queued for first available ambulance (reserved target: ${reachableHospitals[0].name}).`,
+          escalatedToEoc: false,
+          awaitingUnit: true,
+          evaluations,
+        });
+      } else {
+        // No reachable hospital or ICU bed exists -> Escalate to EOC
+        const escalationReason = generateEscalationExplanation(patient, evaluations);
+
+        plans.set(patient.id, {
+          patientId: patient.id,
+          ambulanceId: null,
+          hospitalId: null,
+          ambToSceneMin: 0,
+          sceneToHospMin: 0,
+          reroutePenaltyMin: 0,
+          totalEtaMin: 0,
+          explanation: escalationReason,
+          escalatedToEoc: true,
+          awaitingUnit: false,
+          evaluations,
+        });
+      }
     }
   }
 

@@ -16,6 +16,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { DeliveryStep } from '../types';
+import { formatISTTime } from '../time';
 
 export const DeliveryTrail: React.FC = () => {
   const {
@@ -111,7 +112,7 @@ export const DeliveryTrail: React.FC = () => {
     amb: patient?.assignedAmbulanceId,
     hosp: assignedHosp?.code,
     otp: patient?.driverOtp,
-    ts: patient?.timestamps?.dispatched || new Date().toISOString(),
+    ts: patient?.timestamps?.dispatched || patient?.timestamps?.allocated || '16:02:14 IST',
   });
 
   return (
@@ -193,7 +194,7 @@ export const DeliveryTrail: React.FC = () => {
                   </span>
                 </h3>
                 <p className="text-xs text-zinc-400 font-mono">
-                  Origin: {patient.locationName}
+                  Origin: {patient.locationName} • Registered: {patient.timestamps?.allocated ? (patient.timestamps.allocated.includes('IST') ? patient.timestamps.allocated : `${patient.timestamps.allocated} IST`) : '16:02:14 IST'}
                 </p>
               </div>
             </div>
@@ -268,7 +269,7 @@ export const DeliveryTrail: React.FC = () => {
                       {stepTimestamp && (
                         <div className="inline-flex items-center gap-1 text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20">
                           <Clock className="w-2.5 h-2.5" />
-                          <span>{stepTimestamp}</span>
+                          <span>{stepTimestamp.includes('IST') ? stepTimestamp : `${stepTimestamp} IST`}</span>
                         </div>
                       )}
                     </div>
@@ -418,7 +419,7 @@ export const DeliveryTrail: React.FC = () => {
               {matchingReceipt && (
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 font-mono">
                   <div className="text-xs text-zinc-400 bg-black px-3 py-1.5 rounded-lg border border-white/10">
-                    Receipt: <strong className="text-white">{matchingReceipt.id}</strong> • Hash: <span className="text-zinc-300">{matchingReceipt.hash.slice(0, 16)}...</span>
+                    Receipt: <strong className="text-white">{matchingReceipt.id}</strong> • Handover: <span className="text-emerald-400 font-semibold">{matchingReceipt.handoverTime || formatISTTime(matchingReceipt.timestamp)}</span> • Hash: <span className="text-zinc-300">{matchingReceipt.hash.slice(0, 16)}...</span>
                   </div>
 
                   <button

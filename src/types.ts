@@ -89,6 +89,7 @@ export interface AllocationPlan {
   totalEtaMin: number;
   explanation: string;
   escalatedToEoc: boolean;
+  awaitingUnit?: boolean;
   evaluations: CandidateEvaluation[];
 }
 

@@ -11,9 +11,18 @@ import {
   Sliders,
   Sparkles,
   Layers,
+  Clock,
 } from 'lucide-react';
+import { formatISTTime } from '../time';
 
 export const Header: React.FC = () => {
+  const [currentIST, setCurrentIST] = React.useState(formatISTTime());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentIST(formatISTTime()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const {
     activeTab,
     setActiveTab,
@@ -60,6 +69,11 @@ export const Header: React.FC = () => {
                   OPS CENTER
                 </span>
               </h1>
+              {/* Telemetry Clock (IST) */}
+              <div className="hidden xl:flex items-center gap-1.5 px-2 py-0.5 rounded bg-obsidian-900 border border-white/10 text-[10px] font-mono text-zinc-300">
+                <Clock className="w-3 h-3 text-tactical-orange" />
+                <span>{currentIST}</span>
+              </div>
             </div>
             <p className="text-[11px] text-zinc-400 font-sans">
               Prototype: flood scenario. Other hazards plug in via adapters (planned).

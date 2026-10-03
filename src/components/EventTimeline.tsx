@@ -125,7 +125,7 @@ export const EventTimeline: React.FC = () => {
               </span>
               {!isExpanded && eventLogs[0] && (
                 <span className="text-xs text-zinc-400 truncate max-w-[500px] ml-2 hidden sm:inline font-mono text-[11px]">
-                  <strong className="text-zinc-200">[{eventLogs[0].timestamp}]</strong> {eventLogs[0].title}
+                  <strong className="text-zinc-200">[{eventLogs[0].timestamp.includes('IST') ? eventLogs[0].timestamp : `${eventLogs[0].timestamp} IST`}]</strong> {eventLogs[0].title}
                 </span>
               )}
             </div>
@@ -177,7 +177,7 @@ export const EventTimeline: React.FC = () => {
                   >
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-zinc-500 font-bold">{log.timestamp}</span>
+                        <span className="text-zinc-500 font-bold">{log.timestamp.includes('IST') ? log.timestamp : `${log.timestamp} IST`}</span>
                         {log.badge && (
                           <span
                             className={`px-1.5 py-0.2 rounded text-[9px] font-bold border ${badgeColorClass}`}

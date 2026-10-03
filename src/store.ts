@@ -25,6 +25,7 @@ import {
   canonicalJsonString,
   simpleSha256Hex,
 } from './crypto';
+import { formatISTTime } from './time';
 
 export type ActiveTab = 'dispatch' | 'delivery-trail' | 'audit' | 'driver-app' | 'compare';
 
@@ -126,8 +127,7 @@ interface ReliefGridState {
 }
 
 function getFormattedTime(): string {
-  const d = new Date();
-  return d.toTimeString().split(' ')[0];
+  return formatISTTime(new Date());
 }
 
 const DEMO_STEPS = [
@@ -454,9 +454,11 @@ export const useReliefGridStore = create<ReliefGridState>((set, get) => {
     },
 
     addToast: (title, message, type = 'info') => {
+      const cleanTitle = title.replace(/Hospital\s+HOSP-B/gi, 'Hospital B').replace(/HOSP-B/gi, 'Hospital B');
+      const cleanMessage = message.replace(/Hospital\s+HOSP-B/gi, 'Hospital B').replace(/HOSP-B/gi, 'Hospital B');
       const id = `toast-${Date.now()}-${Math.floor(performance.now() * 100)}`;
       set((state) => ({
-        toasts: [...state.toasts.slice(-4), { id, title, message, type, timestamp: Date.now() }],
+        toasts: [...state.toasts.slice(-4), { id, title: cleanTitle, message: cleanMessage, type, timestamp: Date.now() }],
       }));
       setTimeout(() => {
         get().removeToast(id);
@@ -643,8 +645,8 @@ export const useReliefGridStore = create<ReliefGridState>((set, get) => {
         return a;
       });
 
-      // Generate verifiable receipt for this approved assignment
-      const receiptId = `RCP-80${state.receipts.length + 1}`;
+      // Generate verifiable receipt for this approved assignment (standardized RCP-800x ID format)
+      const receiptId = `RCP-${String(8001 + state.receipts.length).padStart(4, '0')}`;
       const receiptData = {
         id: receiptId,
         patientRef: patient.code,
@@ -777,11 +779,12 @@ export const useReliefGridStore = create<ReliefGridState>((set, get) => {
         eventLogs: [newLog, ...s.eventLogs],
       }));
 
+      const nextHosp = state.hospitals.find((h) => h.id === newPlan?.hospitalId);
       get().addToast(
-        `Rejected ${rejectedHosp?.code} for ${patient.code}`,
+        `Rejected ${rejectedHosp?.name || 'Hospital'} for ${patient.code}`,
         newPlan?.escalatedToEoc
           ? 'No alternatives available. Escalated to EOC.'
-          : `Next best option calculated: Hospital ${newPlan?.hospitalId}.`,
+          : `Next best option calculated: ${nextHosp?.name || 'Hospital B'}.`,
         'warning'
       );
     },
@@ -919,7 +922,7 @@ export const useReliefGridStore = create<ReliefGridState>((set, get) => {
 
       if (isMatch) {
         set((s) => ({
-          tamperedReceiptId: null,
+          tamperedReceiptId: s.tamperedReceiptId === receiptId ? null : s.tamperedReceiptId,
           receipts: s.receipts.map((r) =>
             r.id === receiptId ? { ...r, hash: recomputedHash, status: 'verified' as const } : r
           ),
@@ -931,10 +934,15 @@ export const useReliefGridStore = create<ReliefGridState>((set, get) => {
         );
         return true;
       } else {
-        set({ tamperedReceiptId: receiptId });
+        set((s) => ({
+          tamperedReceiptId: receiptId,
+          receipts: s.receipts.map((r) =>
+            r.id === receiptId ? { ...r, hash: recomputedHash, status: 'tampered' as const } : r
+          ),
+        }));
         get().addToast(
-          'TAMPER DETECTED!',
-          `Hash mismatch on receipt ${receipt.id}! Record integrity violated.`,
+          'HASH MISMATCH DETECTED!',
+          `Hash mismatch on receipt ${receipt.id}! Stored hash does not match recomputed hash.`,
           'danger'
         );
         return false;
@@ -1052,7 +1060,7 @@ export const useReliefGridStore = create<ReliefGridState>((set, get) => {
         timestamp: getFormattedTime(),
         type: 'bed_update',
         title: `ICU Capacity Changed: ${targetHosp?.name}`,
-        details: `Occupied beds updated to ${targetHosp?.occupiedIcuBeds}/${targetHosp?.totalIcuBeds}. Free beds: ${targetHosp?.totalIcuBeds! - targetHosp?.occupiedIcuBeds!}. Triggering auto-replan.`,
+        details: `Occupied beds updated to ${targetHosp?.occupiedIcuBeds}/${targetHosp?.totalIcuBeds}. Free beds: ${targetHosp ? targetHosp.totalIcuBeds - targetHosp.occupiedIcuBeds : 0}. Triggering auto-replan.`,
         badge: 'ICU UPDATE',
         badgeColor: 'blue',
       };
@@ -1131,7 +1139,12 @@ export const useReliefGridStore = create<ReliefGridState>((set, get) => {
         hospitals: resetHospitals,
         ambulances: INITIAL_AMBULANCES,
         roadLinks: INITIAL_ROAD_LINKS,
-        receipts: INITIAL_RECEIPTS,
+        receipts: INITIAL_RECEIPTS.map((r) => ({
+          ...r,
+          hash: r.originalHash,
+          status: 'verified' as const,
+          tamperedField: undefined,
+        })),
         merkleRoot: initialCombined,
         selectedReceiptId: INITIAL_RECEIPTS[0].id,
         selectedTrailPatientId: 'P-101',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useReliefGridStore } from '../store';
 import {
   Layers,
@@ -6,10 +6,20 @@ import {
   CheckCircle2,
   TrendingDown,
   Waves,
+  Clock,
 } from 'lucide-react';
+import { formatISTTime } from '../time';
 
 export const CompareView: React.FC = () => {
   const { isFloodActive, toggleFlood } = useReliefGridStore();
+  const [evaluationTime] = useState(() => formatISTTime());
+
+  // Keep flood active when computing the comparison
+  useEffect(() => {
+    if (!isFloodActive) {
+      toggleFlood();
+    }
+  }, [isFloodActive, toggleFlood]);
 
   return (
     <div className="w-full h-full p-6 overflow-y-auto max-w-7xl mx-auto space-y-6 bg-vantablack">
@@ -30,17 +40,10 @@ export const CompareView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={toggleFlood}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border flex items-center gap-2 ${
-              isFloodActive
-                ? 'bg-red-950/60 border-red-500/50 text-red-300'
-                : 'bg-obsidian-850 border-white/10 text-zinc-300 hover:text-white'
-            }`}
-          >
-            <Waves className="w-4 h-4 text-sky-400" />
-            <span>Flood State: {isFloodActive ? 'CAUSEWAY BLOCKED' : 'CLEAR'}</span>
-          </button>
+          <div className="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold border flex items-center gap-2 bg-red-950/60 border-red-500/50 text-red-300">
+            <Waves className="w-4 h-4 text-sky-400 animate-pulse" />
+            <span>Flood State: ACTIVE</span>
+          </div>
         </div>
       </div>
 
@@ -208,9 +211,13 @@ export const CompareView: React.FC = () => {
           </div>
         </div>
 
-        {/* Mandatory Simulation Result Label */}
-        <div className="pt-2 text-center text-xs text-zinc-400 font-mono border-t border-white/5">
-          <strong className="text-zinc-300">NOTE:</strong> These are simulated results evaluated under an identical deterministic flood model.
+        {/* Scripted Outcome Label */}
+        <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-zinc-400 font-mono border-t border-white/5">
+          <span>Scripted scenario outcome, not a statistical result</span>
+          <span className="text-zinc-500 text-[11px] flex items-center gap-1">
+            <Clock className="w-3 h-3 text-tactical-orange" />
+            Evaluation: {evaluationTime}
+          </span>
         </div>
       </div>
     </div>

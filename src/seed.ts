@@ -59,7 +59,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     status: 'pending',
     rejectedHospitals: [],
     currentStep: 'allocated',
-    timestamps: { allocated: '16:02:14' },
+    timestamps: { allocated: '16:02:14 IST' },
     driverOtp: '829417',
   },
   {
@@ -74,7 +74,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     status: 'pending',
     rejectedHospitals: [],
     currentStep: 'allocated',
-    timestamps: { allocated: '16:02:18' },
+    timestamps: { allocated: '16:02:18 IST' },
     driverOtp: '491723',
   },
   {
@@ -89,7 +89,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     status: 'pending',
     rejectedHospitals: [],
     currentStep: 'allocated',
-    timestamps: { allocated: '16:02:22' },
+    timestamps: { allocated: '16:02:22 IST' },
     driverOtp: '618204',
   },
   {
@@ -104,7 +104,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     status: 'pending',
     rejectedHospitals: [],
     currentStep: 'allocated',
-    timestamps: { allocated: '16:02:30' },
+    timestamps: { allocated: '16:02:30 IST' },
     driverOtp: '359182',
   },
   {
@@ -119,7 +119,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     status: 'pending',
     rejectedHospitals: [],
     currentStep: 'allocated',
-    timestamps: { allocated: '16:02:45' },
+    timestamps: { allocated: '16:02:45 IST' },
     driverOtp: '742915',
   },
 ];
@@ -160,27 +160,27 @@ export const INITIAL_AMBULANCES: Ambulance[] = [
 ];
 
 /**
- * Initial Verified Historical Receipts for Shift
+ * Initial Verified Historical Receipts for Shift (Standard RCP-800x ID Format, Earlier IST Time)
  */
 const rawReceipt1 = {
-  id: 'RCP-7041',
+  id: 'RCP-8001',
   patientRef: 'PAT-089',
   resource: 'Amb-02',
   from: 'Sector 1 (West Coast Wharf)',
   to: 'Hospital A (City Central)',
   reason: 'Pre-flood acute cardiac transfer to nearest node',
-  timestamp: '2026-10-03T15:10:00Z',
+  timestamp: '2026-10-03T08:30:00Z',
 };
 const hash1 = simpleSha256Hex(canonicalJsonString(rawReceipt1));
 
 const rawReceipt2 = {
-  id: 'RCP-7042',
+  id: 'RCP-8002',
   patientRef: 'PAT-094',
   resource: 'Amb-03',
   from: 'Sector 3 (South Point Industrial)',
   to: 'Hospital B (North Heights)',
   reason: 'Severe burn injury transferred directly to regional burn ICU',
-  timestamp: '2026-10-03T15:35:00Z',
+  timestamp: '2026-10-03T09:15:00Z',
 };
 const hash2 = simpleSha256Hex(canonicalJsonString(rawReceipt2));
 
@@ -191,7 +191,7 @@ export const INITIAL_RECEIPTS: DeliveryReceipt[] = [
     originalHash: hash1,
     status: 'verified',
     driverOtp: '519284',
-    handoverTime: '15:24:10',
+    handoverTime: '14:00:00 IST',
   },
   {
     ...rawReceipt2,
@@ -199,7 +199,7 @@ export const INITIAL_RECEIPTS: DeliveryReceipt[] = [
     originalHash: hash2,
     status: 'verified',
     driverOtp: '634812',
-    handoverTime: '15:52:45',
+    handoverTime: '14:45:00 IST',
   },
 ];
 

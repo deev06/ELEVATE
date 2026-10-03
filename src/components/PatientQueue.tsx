@@ -50,7 +50,7 @@ export const PatientQueue: React.FC = () => {
               Triage Priority Queue
             </h2>
             <p className="text-[10px] text-zinc-400 font-mono">
-              Score = Severity / Minutes
+              Score = Severity / Minutes (IST)
             </p>
           </div>
         </div>
@@ -98,6 +98,8 @@ export const PatientQueue: React.FC = () => {
                   ? 'border-emerald-500/30 bg-emerald-950/10'
                   : plan?.escalatedToEoc
                   ? 'border-red-500/50 bg-red-950/15'
+                  : plan?.awaitingUnit
+                  ? 'border-amber-500/40 bg-amber-950/15'
                   : 'border-white/10 hover:border-white/20'
               }`}
             >
@@ -121,6 +123,11 @@ export const PatientQueue: React.FC = () => {
                         <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-rose-600 text-black flex items-center gap-1">
                           <ShieldAlert className="w-2.5 h-2.5" />
                           ESCALATE TO EOC
+                        </span>
+                      )}
+                      {plan?.awaitingUnit && (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                          Awaiting unit
                         </span>
                       )}
                       {patient.status === 'dispatched' && (
@@ -160,8 +167,9 @@ export const PatientQueue: React.FC = () => {
                 <div className="px-3 pb-3 pt-1 border-t border-white/5 space-y-2.5 text-xs">
                   {/* Location & Score */}
                   <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono bg-black px-2 py-1 rounded border border-white/5">
-                    <span>{patient.locationName}</span>
-                    <span>Priority: {priorityScore}</span>
+                    <span className="truncate max-w-[130px]">{patient.locationName}</span>
+                    <span className="text-zinc-400">Triage: {patient.timestamps?.allocated ? (patient.timestamps.allocated.includes('IST') ? patient.timestamps.allocated : `${patient.timestamps.allocated} IST`) : '16:02:14 IST'}</span>
+                    <span>Score: {priorityScore}</span>
                   </div>
 
                   {/* Recommendation Route Banner */}
@@ -206,7 +214,7 @@ export const PatientQueue: React.FC = () => {
                   )}
 
                   {/* Dispatcher Actions */}
-                  {patient.status === 'pending' && !plan?.escalatedToEoc && (
+                  {patient.status === 'pending' && !plan?.escalatedToEoc && !plan?.awaitingUnit && (
                     <div className="flex items-center gap-2 pt-1 font-mono">
                       <button
                         onClick={() => approveRecommendation(patient.id)}
@@ -232,7 +240,19 @@ export const PatientQueue: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Escalated state actions */}
+                  {/* Awaiting Unit State */}
+                  {plan?.awaitingUnit && (
+                    <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/40 text-amber-200 text-center font-mono">
+                      <p className="font-bold text-xs flex items-center justify-center gap-1 text-amber-400 mb-1">
+                        Awaiting Unit
+                      </p>
+                      <p className="text-[10px] text-zinc-400 font-sans">
+                        Reachable hospital and bed confirmed. Queued for immediate assignment as soon as an ambulance completes transit.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Escalated state actions: ONLY when no reachable hospital or ICU bed exists */}
                   {plan?.escalatedToEoc && (
                     <div className="p-2.5 rounded-lg bg-red-950/30 border border-red-500/40 text-red-200 text-center font-mono">
                       <p className="font-bold text-xs flex items-center justify-center gap-1 text-red-400 mb-1">
@@ -240,7 +260,7 @@ export const PatientQueue: React.FC = () => {
                         EOC Action Required
                       </p>
                       <p className="text-[10px] text-zinc-400 font-sans">
-                        All local hospitals full or inaccessible. Requesting Regional Disaster Air Wing.
+                        No reachable hospital or available ICU bed exists. Escalated to Emergency Operations Center.
                       </p>
                     </div>
                   )}

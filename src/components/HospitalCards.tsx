@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useReliefGridStore } from '../store';
 import {
   Building2,
@@ -8,6 +8,8 @@ import {
   Minus,
   Bed,
   Clock,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
 
 export const HospitalCards: React.FC = () => {
@@ -18,39 +20,68 @@ export const HospitalCards: React.FC = () => {
     isPresentationMode,
   } = useReliefGridStore();
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const totalFree = hospitals.reduce((acc, h) => acc + h.freeIcuBeds, 0);
   const totalReserved = hospitals.reduce((acc, h) => acc + h.reservedIcuBeds, 0);
 
+  if (isCollapsed) {
+    return (
+      <div className="h-full flex flex-col items-end">
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="command-panel p-2.5 rounded-2xl border border-white/15 shadow-elevated bg-obsidian-950/95 hover:bg-obsidian-900 transition-all text-white flex flex-col items-center gap-3 cursor-pointer group"
+          title="Expand Hospital Nodes & Beds Panel"
+        >
+          <div className="p-1.5 rounded-lg bg-orange-500/10 text-tactical-orange group-hover:scale-110 transition-transform">
+            <Building2 className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] font-mono [writing-mode:vertical-lr] tracking-widest text-zinc-400 group-hover:text-white uppercase font-bold py-2">
+            Hospitals ({totalFree} Free)
+          </span>
+          <ChevronLeft className="w-4 h-4 text-zinc-400 group-hover:text-white" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`w-96 flex flex-col h-full command-panel rounded-2xl shadow-elevated overflow-hidden transition-all duration-200 bg-obsidian-950/95 border border-white/10 ${
-        isPresentationMode ? 'w-[440px] text-base' : 'text-sm'
+      className={`w-80 flex flex-col h-full command-panel rounded-2xl shadow-elevated overflow-hidden transition-all duration-200 bg-obsidian-950/95 border border-white/10 ${
+        isPresentationMode ? 'w-96 text-base' : 'text-sm'
       }`}
     >
       {/* Panel Header */}
-      <div className="p-3.5 border-b border-white/10 flex items-center justify-between bg-black/60">
+      <div className="p-3 border-b border-white/10 flex items-center justify-between bg-black/60">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-orange-500/10 text-tactical-orange">
             <Building2 className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="font-display font-bold text-white text-sm tracking-wide">
+            <h2 className="font-display font-bold text-white text-xs sm:text-sm tracking-wide">
               Hospital Nodes & Beds
             </h2>
-            <p className="text-[10px] text-zinc-400 font-mono">
-              Network ICU Allocation & Access
+            <p className="text-[9px] sm:text-[10px] text-zinc-400 font-mono">
+              Network ICU Capacity
             </p>
           </div>
         </div>
 
-        {/* Aggregate Bed Status Badge */}
-        <div className="flex items-center gap-1.5 text-xs font-mono">
-          <span className="px-2 py-0.5 rounded bg-black text-emerald-400 border border-white/10">
-            {totalFree} Free
+        {/* Aggregate Bed Status Badge & Collapse Button */}
+        <div className="flex items-center gap-1.5 font-mono">
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-black text-emerald-400 border border-white/10">
+            {totalFree}F
           </span>
-          <span className="px-2 py-0.5 rounded bg-black text-tactical-orange border border-white/10">
-            {totalReserved} Res
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-black text-tactical-orange border border-white/10">
+            {totalReserved}R
           </span>
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="p-1 rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors ml-1"
+            title="Collapse panel to fit full map"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

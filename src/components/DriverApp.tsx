@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useReliefGridStore } from '../store';
+import { formatISTTime } from '../time';
 import {
   Radio,
   WifiOff,
@@ -27,6 +28,14 @@ export const DriverApp: React.FC = () => {
 
   const [simulatedReply, setSimulatedReply] = useState('');
   const [acknowledged, setAcknowledged] = useState(false);
+  const [currentIST, setCurrentIST] = useState(() => formatISTTime());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIST(formatISTTime());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Active unit & its assigned patient/hospital
   const currentAmbulance =
@@ -104,7 +113,7 @@ export const DriverApp: React.FC = () => {
       <div className="phone-viewport flex flex-col select-none">
         {/* Status Bar */}
         <div className="h-10 min-[900px]:h-12 w-full pt-1 min-[900px]:pt-2 px-4 min-[900px]:px-6 flex items-center justify-between text-[11px] font-mono text-zinc-400 bg-obsidian-950 border-b border-white/5 shrink-0 z-20">
-          <span>16:04</span>
+          <span>{currentIST}</span>
           <div className="hidden min-[900px]:block w-20 h-4 bg-black rounded-full border border-white/10 mx-auto" />
           <div className="flex items-center gap-1.5">
             <span>5G</span>
@@ -123,7 +132,7 @@ export const DriverApp: React.FC = () => {
                   <span>PRIORITY: URGENT</span>
                 </div>
                 <p className="text-zinc-400 text-[10px]">
-                  Carrier: SAT-CELL GSM MESH • Channel #04
+                  Carrier: SAT-CELL GSM MESH • Channel #04 • {currentIST}
                 </p>
               </div>
 
@@ -302,7 +311,7 @@ export const DriverApp: React.FC = () => {
 
             {/* Bottom Status Pill */}
             <div className="pt-2 text-center text-[10px] text-zinc-500 font-mono border-t border-white/5">
-              Unit {currentAmbulance.code} • ReliefGrid Telematics v2.1
+              Unit {currentAmbulance.code} • ReliefGrid Telematics v2.1 • {currentIST}
             </div>
           </div>
         )}
